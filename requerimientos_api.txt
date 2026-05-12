@@ -1,0 +1,23 @@
+REQUERIMIENTOS PARA LA IMPLEMENTACIÓN DE LA API EN LA INFRAESTRUCTURA
+
+Para poder desplegar tu API en la infraestructura de AWS (ECS Fargate) que hemos preparado, necesito que me proporciones la siguiente información y archivos:
+
+1. Código Fuente (.tar):
+   - Sí, puedes colocar el archivo .tar en esta misma carpeta.
+   - Asegúrate de que incluya todos los archivos necesarios para que la aplicación funcione.
+
+2. Dockerfile:
+   - ¿Ya tienes un Dockerfile? Si es así, inclúyelo en el .tar.
+   - Si no lo tienes, dime en qué lenguaje/framework está hecha la API (Node.js, Python, Go, etc.) y yo lo crearé por ti.
+
+3. Puerto de la Aplicación:
+   - ¿En qué puerto escucha tu API internamente? (Ejemplo: 3000, 8080, 5000). Necesito esto para configurar el Load Balancer y los Security Groups.
+
+4. Variables de Entorno:
+   - ¿Qué variables de entorno necesita la API para funcionar? (Conexiones a bases de datos, claves secretas, IDs de Cognito, etc.).
+   - NOTA: No me pases las contraseñas reales; solo dime el nombre de la variable y yo te indicaré cómo las subiremos de forma segura a AWS SSM Parameter Store.
+
+5. Ruta de Salud (Health Check):
+   - ¿Tiene tu API algún endpoint tipo `/health` o `/status` que devuelva un 200 OK? Esto es vital para que el Load Balancer sepa que la API está viva.
+
+Una vez que dejes el archivo .tar y me des estos detalles, procederé a actualizar el código de Terraform, construir la imagen de Docker, subirla a ECR y desplegar el servicio.

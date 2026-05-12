@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <title>Redirigint...</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #0f172a;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h2 { font-weight: 400; color: #94a3b8; }
+        p { margin-top: 8px; color: #475569; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="spinner"></div>
+    <h2>Iniciant sessió...</h2>
+    <p>Redirigint al panel d'administrador</p>
+
+    <script>
+        // S3 website base URL
+        var S3_URL = "http://restricted-ecs-project-frontend-h55m5z3a.s3-website-us-east-1.amazonaws.com";
+
+        // Read the hash fragment from the URL (contains the tokens from Cognito)
+        var hash = window.location.hash;
+
+        if (hash && hash.includes("id_token=")) {
+            // Redirect to admin page with the full token hash
+            window.location.href = S3_URL + "/admin.html" + hash;
+        } else if (hash && hash.includes("access_token=")) {
+            // Also works with access_token only
+            window.location.href = S3_URL + "/admin.html" + hash;
+        } else {
+            // No token found, redirect to home
+            window.location.href = S3_URL + "/index.html";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+================================================================================
+                                    AGENDA
+================================================================================
+DOCUMENTACIÓN TÉCNICA Y DE INFRAESTRUCTURA - PROYECTO AGENDA I.T.I.C.
+================================================================================
+
+Este documento detalla la arquitectura, el flujo de datos y los componentes de 
+infraestructura que sostienen el proyecto "Agenda". El objetivo es proporcionar 
+una visión técnica clara pero accesible sobre cómo operan los servicios en la 
+nube para garantizar la seguridad, disponibilidad y persistencia de los datos.
+
+--------------------------------------------------------------------------------
+1. ARQUITECTURA GENERAL DE LA INFRAESTRUCTURA (AWS)
+--------------------------------------------------------------------------------
+
+La infraestructura ha sido diseñada bajo el paradigma de "Infraestructura como 
+Código" (IaC) utilizando Terraform, lo que garantiza que todo el entorno sea 
+replicable y estable. Se aloja íntegramente en Amazon Web Services (AWS).
+
+COMPONENTES PRINCIPALES:
+
+A. Red Virtual y Segmentación (VPC - Virtual Private Cloud)
+   Todo el sistema reside en una red privada virtual aislada de internet. 
+   Para maximizar la seguridad, la red se divide en:
+   - Subredes Públicas: Alojan los puntos de acceso (Load Balancer).
+   - Subredes Privadas: Alojan los servidores de procesamiento (ECS) y la 
+     base de datos (RDS). Estas subredes no tienen acceso directo desde 
+     internet, lo que previene ataques externos directos.
+
+B. Gestión de Seguridad (Security Groups - Grupos de Seguridad)
+   Cada componente tiene un "cortafuegos" inteligente que solo permite las 
+   comunicaciones necesarias. El flujo está restringido de la siguiente forma:
+   - El Balanceador solo permite tráfico HTTP/HTTPS desde internet.
+   - El Servidor (ECS) solo permite tráfico que provenga exclusivamente del 
+     Balanceador.
+   - La Base de Datos (RDS) solo permite conexiones que provengan 
+     exclusivamente del Servidor (ECS).
+   Esto crea una cadena de confianza donde nadie puede "saltarse" pasos.
+
+C. Procesamiento en Contenedores (ECS Fargate)
+   La aplicación (API) se ejecuta dentro de contenedores Docker gestionados por 
+   Amazon ECS Fargate. Fargate es un servicio "serverless", lo que significa que:
+   - No hay que gestionar sistemas operativos ni parches de seguridad manuales.
+   - El sistema monitoriza la salud de la aplicación. Si el servidor detecta 
+     un error crítico, lo reinicia automáticamente en segundos sin pérdida 
+     de servicio para el usuario.
+
+D. Persistencia de Datos (RDS PostgreSQL)
+   Se utiliza una base de datos PostgreSQL gestionada. Su función es almacenar 
+   toda la información de usuarios, salas y reservas de forma permanente.
+   - Se encarga de realizar copias de seguridad automáticas.
+   - Está configurada para garantizar que los datos no se pierdan ante 
+     fallos eléctricos o del sistema.
+
+E. Autenticación y Control de Acceso (AWS Cognito)
+   Implementa un sistema de gestión de identidades robusto. Cognito se encarga 
+   de verificar que quien intenta acceder al panel de administrador sea 
+   realmente quien dice ser, integrándose con Google OAuth 2.0.
+   - Evita tener que guardar contraseñas en nuestra base de datos (mayor seguridad).
+   - Genera "Tokens de Seguridad" (JWT) que se validan en cada petición.
+
+F. Alojamiento Estático (S3 Buckets)
+   La parte visual de la web se sirve desde S3. Es un almacenamiento de alta 
+   durabilidad donde residen los archivos HTML, CSS y JavaScript que el 
+   navegador del usuario descarga para mostrar la interfaz.
+
+--------------------------------------------------------------------------------
+2. ESCENARIOS Y FLUJO DE OPERACIÓN (¿QUÉ PASA CUANDO...?)
+--------------------------------------------------------------------------------
+
+Escenario 1: El usuario entra por primera vez
+- El navegador solicita los archivos al S3.
+- S3 entrega la interfaz visual. El usuario ve el calendario pero no puede 
+  hacer cambios en la administración.
+
+Escenario 2: El administrador inicia sesión con Google
+- El usuario es redirigido a una página segura de Google.
+- Tras el éxito, AWS Cognito recibe la validación y genera un ID Token.
+- La web guarda este token y lo usará como "pasaporte" en todas sus acciones.
+
+Escenario 3: El administrador rellena el formulario de reserva
+- La web envía la información junto con el Token al Balanceador de Carga (ALB).
+- El ALB verifica que la petición sea correcta y la pasa al Servidor (ECS).
+- El Servidor valida el Token con Cognito para confirmar que el usuario tiene 
+  permiso.
+- Una vez validado, el Servidor escribe la reserva en la Base de Datos (RDS).
+- El sistema confirma el éxito y la web muestra el mensaje de "Guardado".
+
+--------------------------------------------------------------------------------
+3. API Y LÓGICA DE NEGOCIO (BACKEND) - RESERVADO
+--------------------------------------------------------------------------------
+
+[ ESPACIO PARA DESCRIPCIÓN TÉCNICA DEL DESARROLLADOR DE API ]
+Detalles sobre: Rutas, Controladores, Endpoints, Modelos Java, etc.
+
+
+--------------------------------------------------------------------------------
+4. INTERFAZ Y EXPERIENCIA DE USUARIO (WEB) - RESERVADO
+--------------------------------------------------------------------------------
+
+[ ESPACIO PARA DESCRIPCIÓN TÉCNICA DEL DESARROLLADOR FRONTEND ]
+Detalles sobre: Diseño, Componentes, Reactivitat, Gestión de estados, etc.
+
+================================================================================
+FIN DE LA DOCUMENTACIÓN - PROYECTO AGENDA
+================================================================================

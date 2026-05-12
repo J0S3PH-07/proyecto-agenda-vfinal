@@ -1,0 +1,56 @@
+================================================================================
+FLUJO DE INFORMACIÓN Y ARQUITECTURA DEL SISTEMA - PROYECTO AGENDA
+================================================================================
+
+1. DISPOSITIVOS DE USUARIO (Frontend)
+--------------------------------------
+El sistema está diseñado para ser accesible desde cualquier navegador moderno, lo
+que garantiza compatibilidad con los siguientes dispositivos:
+- ORDENADORES: Acceso completo para administración y gestión.
+- MÓVILES: Interfaz responsiva para consultas rápidas y reservas.
+- RASPBERRY PI (Pantalla táctil): Dispositivo ubicado físicamente en las salas
+  para permitir check-ins y reservas "in situ" de forma rápida y táctil.
+
+Cualquier acción realizada en estos dispositivos (hacer una reserva, cancelar,
+climatización, etc.) inicia una petición HTTPS hacia la nube.
+
+2. INFRAESTRUCTURA AWS (Nube)
+-------------------------------
+La infraestructura en la nube recibe la petición y la gestiona de la siguiente
+forma:
+
+A. LOAD BALANCER (ALB):
+   Es la puerta de entrada. Recibe la petición y la redirige al "cerebro" del
+   sistema (la API). Si hay mucho tráfico, el balanceador reparte la carga.
+
+B. API SPRING BOOT (ECS Fargate):
+   La lógica de negocio se ejecuta en contenedores gestionados por AWS ECS.
+   - Procesa la petición del usuario.
+   - Verifica la identidad mediante COGNITO (Seguridad).
+   - Ejecuta las reglas de negocio (disponibilidad de sala, horarios, etc.).
+
+C. BASE DE DATOS RDS (PostgreSQL):
+   Es el almacenamiento persistente. CUALQUIER ACCIÓN que implique un cambio
+   (ej. "Reservar Sala") se traduce en una transacción hacia el RDS.
+   - Seguridad: La base de datos está en una red privada y solo la API tiene
+     permiso para escribir en ella.
+   - Consistencia: Una vez que la API confirma la reserva, el dato queda guardado
+     permanentemente en el almacenamiento gestionado de AWS.
+
+3. RESUMEN DEL FLUJO DE DATOS
+-------------------------------
+[ USUARIO / RASPBERRY ]
+         |
+    (Petición HTTP) --> [ LOAD BALANCER ]
+                               |
+                        [ API SPRING BOOT ] <--- (Valida Sesión) ---> [ COGNITO ]
+                               |
+                        (Acción persistente)
+                               |
+                               V
+                    [ BASE DE DATOS RDS ] <--- (DATO GUARDADO)
+
+Cualquier cambio que el usuario vea reflejado en su pantalla ha pasado por este
+ciclo, asegurando que si la Raspberry Pi de una sala reserva un hueco, el usuario
+en su móvil vea instantáneamente que esa sala ya no está disponible.
+================================================================================

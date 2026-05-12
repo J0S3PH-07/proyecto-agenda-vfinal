@@ -1,0 +1,29 @@
+Explicación de permisos con Terraform y el rol 'voclabs'
+
+1. Tu Identidad Actual:
+   El comando 'aws sts get-caller-identity' muestra que estás actuando bajo el rol "voclabs":
+   "Arn": "arn:aws:sts::033588268326:assumed-role/voclabs/user4414592=joseph"
+
+2. Por qué funciona:
+   En AWS, los permisos se asignan a la "identidad" (Usuario o Rol) que ejecuta los comandos.
+   En entornos educativos (como AWS Academy o Vocareum), el rol "voclabs" está preconfigurado con una política de permisos (IAM Policy) que PERMITE explícitamente crear recursos de infraestructura básicos como:
+   - VPCs, Subnets, Internet Gateways
+   - Instancias EC2, Security Groups
+   - Balanceadores de carga (ALB), ECS, ECR
+   
+   Estos permisos son necesarios para que puedas realizar los ejercicios del laboratorio.
+
+3. Terraform y Credenciales:
+   Terraform no tiene permisos por sí mismo; utiliza las credenciales que están activas en tu terminal. 
+   Como tu terminal ya tiene cargadas las credenciales del rol "voclabs" (probablemente mediante variables de entorno AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY y AWS_SESSION_TOKEN), Terraform "actúa" como ese rol.
+   
+   Por lo tanto:
+   Tus archivos .tf describen QUÉ crear.
+   Tu rol actual (voclabs) tiene el permiso para CREARLO.
+   -> Resultado: Éxito.
+
+4. Qué NO podrías hacer:
+   Probablemente este rol tenga restricciones para cosas fuera del alcance del laboratorio, como:
+   - Crear nuevos usuarios IAM (para evitar escalada de privilegios).
+   - Usar servicios costosos no permitidos o regiones diferentes.
+   - Modificar la política del propio rol "voclabs".

@@ -1,0 +1,38 @@
+INFORME DE ACTUALIZACIÓN: WEB_PROJECTE
+=======================================
+Fecha: 23 de Abril de 2026
+Estado: Web 100% Funcional y Compatible con API_2 y RDS.
+
+CAMBIOS APLICADOS:
+
+1. CONFIGURACIÓN DINÁMICA (js/config.js):
+   - Se ha creado este archivo desde cero para evitar el uso de IPs fijas.
+   - Ahora la web detecta automáticamente el balanceador de carga de AWS y los IDs de Cognito del laboratorio actual.
+
+2. INTEGRACIÓN DE FORMULARIOS (admin.html):
+   - Se ha implementado una VENTANA MODAL (ID: modal-activitat) que estaba ausente.
+   - Se han añadido campos de entrada para todos los datos de la base de datos:
+     * Título
+     * Sala (Desplegable dinámico)
+     * Responsable (Mapeado a 'resum')
+     * Descripción (Campo anteriormente huérfano)
+     * Estado (Campo anteriormente huérfano: Programada/Cancelada)
+     * Fecha y Horarios (Inici/Fi)
+
+3. LÓGICA DE PROGRAMACIÓN (js/admin/admin.js):
+   - SUSTITUCIÓN DE IP: Se ha eliminado la IP 34.230.76.192 que bloqueaba la conexión.
+   - FUNCIONES CRUD:
+     * createActivitat: Ahora envía un JSON completo con los 9 campos requeridos por la API_2.
+     * updateActivitat: Implementada la función de edición de actividades existentes.
+     * deleteActivitat: Conectada con el endpoint DELETE de la API.
+   - CARGA DE SALES: Se ha añadido una función que pide a la API la lista de salas reales de la RDS para llenar el formulario.
+
+4. DISEÑO Y ESTÉTICA (css/admin/admin.css):
+   - Se han añadido los estilos para el modal, formularios y botones de acción (Editar/Esborrar) para que la interfaz sea profesional y coherente con el resto del diseño.
+
+5. COMPATIBILIDAD DE CAMPOS (MAPPING):
+   - Se ha asegurado que el campo 'visible' enviado por la web sea interpretado como 'activa' por la API_2.
+   - Se ha validado que el formato de fecha (YYYY-MM-DD) y hora (HH:mm) sea el que espera la base de datos PostgreSQL.
+
+ESTADO FINAL:
+La web ahora puede realizar todas las operaciones de gestión de la agenda contra la infraestructura de AWS sin errores de conexión ni pérdida de datos.

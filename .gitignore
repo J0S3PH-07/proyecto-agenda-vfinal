@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+*.jar
+target/
+.DS_Store
+node_modules/
+temp_*
+db_result.txt
