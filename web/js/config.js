@@ -3,8 +3,8 @@ const CONFIG = {
     COGNITO: {
         REGION: 'us-east-1',
         DOMAIN: 'restricted-ecs-project-auth-x6bpw6cn.auth.us-east-1.amazoncognito.com',
-        USER_POOL_ID: 'us-east-1_0hBDiyvbk',
-        APP_CLIENT_ID: '5udu2347boqdlv4bqrls7cqe0c',
+        USER_POOL_ID: 'us-east-1_UwoQywzEP',
+        APP_CLIENT_ID: 'eqd9hegckuis89eqbpshs2lla',
         REDIRECT_URI: 'https://app.manzanaazul.cat/login.html'
     }
 };

@@ -26,23 +26,23 @@ public class CorreoPermitidoController {
     @Autowired
     CorreoPermitidoService correoPermitidoService;
 
-    @GetMapping("/correos-permitidos")
+    @GetMapping({"", "/"})
     public ResponseEntity<List<CorreoPermitidoResponseDto>> getAllCorreosPermitidos() {
         return ResponseEntity.ok(correoPermitidoService.getAllCorreosPermitidos());
     }
 
-    @GetMapping("/correos-permitidos/{email}")
+    @GetMapping("/{email}")
     public ResponseEntity<CorreoPermitidoResponseDto> getCorreoPermitido(@PathVariable String email) {
         return ResponseEntity.ok(correoPermitidoService.getCorreoPermitido(email));
     }
 
-    @PostMapping("/correos-permitidos")
+    @PostMapping({"", "/"})
     public ResponseEntity<CorreoPermitidoResponseDto> createCorreoPermitido(@Valid @RequestBody CorreoPermitidoRequestDto correoPermitido) {
         CorreoPermitidoResponseDto createdCorreoPermitido = correoPermitidoService.createCorreoPermitido(correoPermitido);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCorreoPermitido);
     }
 
-    @DeleteMapping("/correos-permitidos/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCorreoPermitido(@PathVariable Long id) {
         correoPermitidoService.deleteCorreoPermitido(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

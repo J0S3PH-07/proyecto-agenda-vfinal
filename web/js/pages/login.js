@@ -73,6 +73,7 @@ async function handleCallback() {
     sessionStorage.removeItem('pkce_verifier');
 
     try {
+        console.log("Iniciant intercanvi de codi per token...");
         // 1. Intercanviar el codi pel token de Cognito
         const tokenRes = await fetch(`https://${COGNITO_DOMAIN}/oauth2/token`, {
             method:  'POST',
@@ -87,11 +88,14 @@ async function handleCallback() {
         });
 
         if (!tokenRes.ok) {
-            throw new Error('Error obtenint el token de Cognito');
+            const errData = await tokenRes.text();
+            console.error("Error Cognito:", errData);
+            throw new Error('Error Cognito: ' + tokenRes.status);
         }
 
         const tokens  = await tokenRes.json();
         const idToken = tokens.id_token; 
+        console.log("Token obtingut de Cognito. Cridant a l'API...");
 
         // 2. Registrar/actualitzar l'usuari a l'API con el token de Cognito
         const apiRes = await fetch(`${API_BASE}/usuaris/token`, {
@@ -100,11 +104,12 @@ async function handleCallback() {
         });
 
         if (!apiRes.ok) {
-            loadingEl.style.display = 'none';
-            errorEl.style.display   = 'block';
-            return true;
+            const errData = await apiRes.text();
+            console.error("Error API:", apiRes.status, errData);
+            throw new Error('Error API: ' + apiRes.status);
         }
 
+        console.log("API acceptada. Guardant token...");
         // 3. Guardar el token i redirigir
         setToken(idToken);
         window.history.replaceState({}, '', window.location.pathname); 
@@ -114,6 +119,7 @@ async function handleCallback() {
         console.error("Error d'autenticació:", e);
         loadingEl.style.display = 'none';
         errorEl.style.display   = 'block';
+        errorEl.innerHTML = `⚠ ${e.message}. Contacta amb el suport.`;
     }
 
     return true;

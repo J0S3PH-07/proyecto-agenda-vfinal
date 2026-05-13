@@ -64,8 +64,18 @@ public class UsuariService {
     }
 
     private Rol getRol(String email) {
-        if (!email.contains("@iticbcn.cat")) {
+        if (!email.contains("@iticbcn.cat") && !email.equals("josephabanto07@gmail.com")) {
             throw new BadRequestException("Només s'accepten correus de l'ITIC BCN.");
+        }
+
+        // Lista de administradores maestros (coincide con SecurityConfig)
+        java.util.Set<String> adminEmails = java.util.Set.of(
+            "2223_joseph.abanto@iticbcn.cat",
+            "josephabanto07@gmail.com"
+        );
+
+        if (adminEmails.contains(email)) {
+            return Rol.ADMIN;
         }
 
         try {
@@ -73,7 +83,7 @@ public class UsuariService {
                 return Rol.ADMIN;
             }
         } catch (ResourceNotFoundException e) {
-            // No es necesario manejar esta excepción aquí, ya que simplemente significa que el correo no está en la lista blanca.
+            // No está en la lista blanca de la DB
         }
             
         if (!email.split("@")[0].contains("_")) {
@@ -93,22 +103,34 @@ public class UsuariService {
 
     // Crearemos un usuario o no, a traves de un token
     public UsuariResponseDto createOrUpdateUsuariFromToken(String token) {
+        System.out.println("DEBUG: Iniciando autenticación con token...");
         String email = normalizeEmail(getTokenEmail(token));
+        System.out.println("DEBUG: Email extraído del token: " + email);
 
-        Optional<Usuari> usuariOptional = usuariRepository.findByEmail(email);
-        if (usuariOptional.isPresent()) {
-            return toDTO(usuariOptional.get());
+        if (email == null) {
+            System.err.println("ERROR: No se pudo extraer el email del token.");
+            throw new BadRequestException("No se pudo extraer el email del token de autenticación.");
         }
 
-        Usuari user = new Usuari();
-        user.setEmail(email);
-        user.setNom(getTokenName(token) == null ? "Desconocido" : getTokenName(token));
-        user.setFotoPerfil(getTokenPicture(token));
+        Optional<Usuari> usuariOptional = usuariRepository.findByEmail(email);
+        Usuari user;
+        if (usuariOptional.isPresent()) {
+            System.out.println("DEBUG: Usuario ya existente: " + email);
+            user = usuariOptional.get();
+        } else {
+            System.out.println("DEBUG: Creando nuevo usuario: " + email);
+            user = new Usuari();
+            user.setEmail(email);
+            user.setNom(getTokenName(token) == null ? "Usuari" : getTokenName(token));
+            user.setFotoPerfil(getTokenPicture(token));
+            user.setActiu(true);
+            user.setProvider(getTokenProvider(token) == null ? "google" : getTokenProvider(token));
+            user.setProviderId(getTokenProviderId(token));
+        }
+        
         user.setRol(getRol(email));
-        user.setActiu(true);
-        user.setProvider(getTokenProvider(token) == null ? "cognito" : getTokenProvider(token));
-        user.setProviderId(getTokenProviderId(token));
         user = usuariRepository.save(user);
+        System.out.println("DEBUG: Autenticación exitosa para: " + email + " con rol: " + user.getRol());
         return toDTO(user);
     }
 
@@ -137,135 +159,69 @@ public class UsuariService {
     }
 
     private String getTokenEmail(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-
         return extractClaim(token, "email");
     }
 
     private String getTokenName(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-
         return extractClaim(token, "name");
     }
 
     private String getTokenPicture(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-
         return extractClaim(token, "picture");
     }
 
     private String getTokenProviderId(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-
-        String payload = decodeTokenPayload(token);
-        if (payload == null) {
-            return null;
-        }
-
-        String userId = extractJsonValue(payload, "userId");
-        if (userId != null) {
-            return userId;
-        }
-
-        String cognitoUsername = extractJsonValue(payload, "cognito:username");
-        if (cognitoUsername != null) {
-            return cognitoUsername;
-        }
-
-        String sub = extractJsonValue(payload, "sub");
-        if (sub != null) {
-            return sub;
-        }
-
-        return null;
+        return extractClaim(token, "providerId");
     }
 
     private String getTokenProvider(String token) {
-        if (token == null || token.isBlank()) {
-            return null;
-        }
-
-        String payload = decodeTokenPayload(token);
-        if (payload == null) {
-            return null;
-        }
-
-        String providerName = extractJsonValue(payload, "providerName");
-        if (providerName != null) {
-            return providerName.toLowerCase(Locale.ROOT);
-        }
-
-        return null;
+        return "google"; 
     }
 
+
+
+
     private String extractClaim(String token, String claimName) {
-        String payload = decodeTokenPayload(token);
-        if (payload == null) {
+        try {
+            String payload = decodeTokenPayload(token);
+            if (payload == null) return null;
+            
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(payload);
+            
+            if (node.has(claimName)) {
+                return node.get(claimName).asText();
+            }
+            
+            // Soporte para claims anidados o alternativos en Cognito
+            if (claimName.equals("providerId")) {
+                if (node.has("sub")) return node.get("sub").asText();
+                if (node.has("cognito:username")) return node.get("cognito:username").asText();
+            }
+            
+            return null;
+        } catch (Exception e) {
+            System.err.println("ERROR al extraer claim " + claimName + ": " + e.getMessage());
             return null;
         }
-        return extractJsonValue(payload, claimName);
     }
 
     private String decodeTokenPayload(String token) {
-        String normalizedToken = token.startsWith("Bearer ") ? token.substring(7).trim() : token;
-        String[] parts = normalizedToken.split("\\.");
-        if (parts.length != 3) {
-            return null;
-        }
-
-        byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
-        return new String(decoded, StandardCharsets.UTF_8);
-    }
-
-    private String extractJsonValue(String json, String key) {
-        String quotedKey = "\"" + key + "\"";
-        int keyIndex = json.indexOf(quotedKey);
-        if (keyIndex < 0) {
-            return null;
-        }
-
-        int colonIndex = json.indexOf(':', keyIndex + quotedKey.length());
-        if (colonIndex < 0) {
-            return null;
-        }
-
-        int startIndex = colonIndex + 1;
-        while (startIndex < json.length() && Character.isWhitespace(json.charAt(startIndex))) {
-            startIndex++;
-        }
-
-        if (startIndex >= json.length()) {
-            return null;
-        }
-
-        if (json.charAt(startIndex) == '"') {
-            int endIndex = json.indexOf('"', startIndex + 1);
-            if (endIndex < 0) {
+        try {
+            String normalizedToken = token.startsWith("Bearer ") ? token.substring(7).trim() : token;
+            String[] parts = normalizedToken.split("\\.");
+            if (parts.length < 2) {
+                System.err.println("ERROR: Token malformado (menos de 2 partes)");
                 return null;
             }
-            return json.substring(startIndex + 1, endIndex);
+            byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
+            return new String(decoded, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            System.err.println("ERROR al decodificar payload del token: " + e.getMessage());
+            return null;
         }
-
-        int endIndex = startIndex;
-        while (endIndex < json.length()) {
-            char current = json.charAt(endIndex);
-            if (current == ',' || current == '}' || current == ']') {
-                break;
-            }
-            endIndex++;
-        }
-
-        String value = json.substring(startIndex, endIndex).trim();
-        return value.isBlank() ? null : value;
     }
+
 
     private String normalizeEmail(String email) {
         if (email == null) {

@@ -3,8 +3,8 @@
 
     // Configuración
     const API = {
-        SALAS: `${CONFIG.API_BASE}/sala/salas`,
-        ACTIVITATS: `${CONFIG.API_BASE}/activitats/activitats`
+        SALAS: `${CONFIG.API_BASE}/salas`,
+        ACTIVITATS: `${CONFIG.API_BASE}/activitats`
     };
 
     // DOM elements

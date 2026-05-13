@@ -23,33 +23,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
-@RequestMapping("/sala")
+@RequestMapping("/salas")
 @CrossOrigin(origins = "*")
 public class SalaController {
 
     @Autowired
     SalaService salaService;
 
-    @GetMapping("/salas")
+    @GetMapping({"", "/"})
     public ResponseEntity<List<SalaResponseDTO>> getAllSalas() {
         List<SalaResponseDTO> salas = salaService.getAllSalas();
         return ResponseEntity.status(HttpStatus.OK).body(salas);
     }
 
-    @PostMapping("/salas")
+    @PostMapping({"", "/"})
     public ResponseEntity<SalaResponseDTO> postSala(@Valid @RequestBody SalaRequest salaRequest) {
         SalaResponseDTO sala = salaService.createSala(salaRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(sala);
     }
 
-    @PutMapping("/salas/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<SalaResponseDTO> putSala(@PathVariable Long id, @Valid @RequestBody SalaRequest salaRequest) {
         SalaResponseDTO salaActualitzada = salaService.updateSala(id, salaRequest);
         return ResponseEntity.status(HttpStatus.OK).body(salaActualitzada);
         
     }
 
-    @DeleteMapping("/salas/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSala(@PathVariable Long id) {
         salaService.deleteSala(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();

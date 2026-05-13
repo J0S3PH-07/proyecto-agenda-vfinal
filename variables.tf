@@ -103,11 +103,11 @@ variable "db_username" {
 variable "google_client_id" {
   description = "Google OAuth Client ID"
   type        = string
-  default     = "PONER_AQUI_ID_GOOGLE"
+  default     = "451004176913-atm3nbvsmojl2h9kilvl6ohvvs7oamv9.apps.googleusercontent.com"
 }
 
 variable "google_client_secret" {
   description = "Google OAuth Client Secret"
   type        = string
-  default     = "PONER_AQUI_SECRET_GOOGLE"
+  default     = "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"
 }

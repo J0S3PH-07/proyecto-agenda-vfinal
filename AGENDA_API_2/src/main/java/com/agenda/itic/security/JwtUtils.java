@@ -18,7 +18,7 @@ public class JwtUtils {
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
-    private static final long EXPIRATION_TIME = 86400000; // 24 hours
+    private static final long EXPIRATION_TIME = 86400000; 
 
     public String generateToken(Usuari usuari) throws JOSEException {
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()

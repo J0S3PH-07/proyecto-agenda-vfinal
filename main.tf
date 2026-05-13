@@ -156,7 +156,7 @@ resource "aws_lb_target_group" "main" {
   target_type = "ip"
 
   health_check {
-    path                = "/api/activitats/activitats"
+    path                = "/api/activitats"
     matcher             = "200,302,401"
     interval            = 30
     timeout             = 5
